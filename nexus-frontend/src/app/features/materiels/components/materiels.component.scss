@@ -1,0 +1,26 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+
+  h2 {
+    font-size: 28px;
+  }
+}
+
+.alerts-section {
+  margin-bottom: 20px;
+}
+
+.low-stock {
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #666;
+}

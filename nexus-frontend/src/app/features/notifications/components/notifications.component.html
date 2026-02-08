@@ -1,0 +1,26 @@
+<div class="page">
+  <div class="page-header">
+    <h2>🔔 Notifications</h2>
+    <button class="btn-secondary" (click)="markAllAsRead()">✓ Tout marquer lu</button>
+  </div>
+
+  <div class="card">
+    <div 
+      class="notification-item" 
+      *ngFor="let notif of notifications"
+      [class.unread]="!notif.is_read"
+      (click)="markAsRead(notif.id)"
+    >
+      <span class="notif-icon">{{ getIcon(notif.type_notif) }}</span>
+      <div class="notif-content">
+        <h4>{{ notif.titre }}</h4>
+        <p>{{ notif.message }}</p>
+      </div>
+      <span class="notif-time">{{ formatDate(notif.created_at) }}</span>
+    </div>
+
+    <p *ngIf="notifications.length === 0" class="empty-message">
+      Aucune notification
+    </p>
+  </div>
+</div>

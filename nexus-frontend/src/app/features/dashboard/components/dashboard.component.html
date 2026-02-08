@@ -1,0 +1,65 @@
+<div class="page">
+  <div class="page-header">
+    <h2>📊 Dashboard</h2>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>{{ stats.chantiers }}</h3>
+      <p>Chantiers</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ stats.employes }}</h3>
+      <p>Employés</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ stats.depenses | money }}</h3>
+      <p>Dépenses</p>
+    </div>
+    <div class="stat-card" [class.warning]="stats.alertes > 0">
+      <h3>{{ stats.alertes }}</h3>
+      <p>Alertes Stock</p>
+    </div>
+  </div>
+
+  <!-- Alertes Stock -->
+  <div *ngIf="alertes.length > 0" class="alerts-section">
+    <div class="alert-box alert-warning" *ngFor="let alerte of alertes">
+      ⚠️ Stock bas: {{ alerte.nom }} - {{ alerte.quantite }} {{ alerte.unite }}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>🏗️ Chantiers Récents</h3>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Chantier</th>
+          <th>Client</th>
+          <th>Budget</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let chantier of recentChantiers">
+          <td>
+            <strong>{{ chantier.nom }}</strong><br>
+            <small class="text-muted">{{ chantier.reference }}</small>
+          </td>
+          <td>{{ chantier.client_nom }}</td>
+          <td>{{ chantier.budget_prevu | money }}</td>
+          <td>
+            <span class="status-badge status-{{ chantier.status }}">
+              {{ chantier.status }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="recentChantiers.length === 0">
+          <td colspan="4" class="text-center text-muted">Aucun chantier</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,36 @@
+<aside class="sidebar">
+  <div class="logo">
+    <h1>NEXUS BUILDING</h1>
+    <span>SOLUTION</span>
+  </div>
+  
+  <div class="user-info" *ngIf="authService.currentUserValue">
+    <div class="user-avatar">{{ authService.getUserInitials() }}</div>
+    <div class="user-details">
+      <h3>{{ authService.getUserFullName() }}</h3>
+      <span>{{ authService.currentUserValue.role | uppercase }}</span>
+    </div>
+  </div>
+  
+  <nav>
+    <a 
+      *ngFor="let item of navItems" 
+      class="nav-item" 
+      [class.active]="isActive(item.route)"
+      [routerLink]="item.route"
+    >
+      <span>{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+      <span 
+        class="badge" 
+        *ngIf="item.route === '/notifications' && notificationCount > 0"
+      >
+        {{ notificationCount }}
+      </span>
+    </a>
+  </nav>
+  
+  <div class="logout-btn" (click)="logout()">
+    🚪 Déconnexion
+  </div>
+</aside>

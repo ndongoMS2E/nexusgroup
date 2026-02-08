@@ -1,0 +1,102 @@
+// Colors
+$bg-primary: #0a0a0a;
+$bg-secondary: #1a1a1a;
+$bg-tertiary: #252525;
+$bg-card: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+$bg-sidebar: linear-gradient(180deg, #0f0f0f 0%, #1a1a1a 100%);
+$bg-login: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+
+$border-color: #333;
+$border-light: #2a2a2a;
+$border-dark: #444;
+
+$text-primary: #fff;
+$text-secondary: #888;
+$text-muted: #666;
+
+$gradient-text: linear-gradient(135deg, #fff 0%, #888 100%);
+$gradient-btn: linear-gradient(135deg, #fff 0%, #ccc 100%);
+
+// Status Colors
+$color-success: #4caf50;
+$color-warning: #ff9800;
+$color-danger: #f44336;
+$color-info: #2196f3;
+$color-purple: #9c27b0;
+
+// Spacing
+$sidebar-width: 260px;
+$border-radius: 8px;
+$border-radius-lg: 15px;
+
+// Mixins
+@mixin gradient-text {
+  background: $gradient-text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@mixin card {
+  background: $bg-card;
+  border-radius: $border-radius-lg;
+  border: 1px solid $border-color;
+  padding: 25px;
+}
+
+@mixin btn-primary {
+  padding: 10px 20px;
+  background: $gradient-btn;
+  color: #000;
+  border: none;
+  border-radius: $border-radius;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@mixin btn-secondary {
+  padding: 10px 20px;
+  background: transparent;
+  color: $text-primary;
+  border: 1px solid $border-dark;
+  border-radius: $border-radius;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: $text-primary;
+  }
+}
+
+@mixin form-input {
+  width: 100%;
+  padding: 12px 15px;
+  background: $bg-primary;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  color: $text-primary;
+  font-size: 14px;
+  
+  &:focus {
+    outline: none;
+    border-color: $text-primary;
+  }
+}
+
+@mixin status-badge($bg-color, $text-color) {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba($text-color, 0.2);
+  color: $text-color;
+}

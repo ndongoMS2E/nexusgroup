@@ -1,0 +1,37 @@
+services:
+  api:
+    build: .
+    container_name: nexus-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=nexus
+      - DB_PASSWORD=nexus123
+      - DB_NAME=nexus_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./uploads:/app/uploads
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexus-db
+    environment:
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: nexus123
+      POSTGRES_DB: nexus_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -1,0 +1,68 @@
+<div class="page">
+  <div class="page-header">
+    <h2>📁 Documents</h2>
+    <button class="btn-primary" (click)="openModal()">+ Ajouter</button>
+  </div>
+
+  <div class="document-grid">
+    <div class="document-card" *ngFor="let doc of documents">
+      <div class="icon">{{ getIcon(doc.type_document) }}</div>
+      <h4>{{ doc.nom }}</h4>
+      <p>{{ doc.type_document }} | {{ formatSize(doc.taille) }}</p>
+      <div class="document-actions">
+        <button class="action-btn" (click)="downloadDocument(doc.id)" title="Télécharger">
+          ⬇️
+        </button>
+        <button class="action-btn delete" (click)="deleteDocument(doc.id)" title="Supprimer">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <p *ngIf="documents.length === 0" class="empty-message">
+    Aucun document
+  </p>
+</div>
+
+<!-- Modal -->
+<app-modal [isOpen]="isModalOpen" title="Ajouter Document" (closed)="closeModal()">
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label>Chantier *</label>
+      <select [(ngModel)]="formData.chantier_id" name="chantier_id" required>
+        <option [value]="0" disabled>-- Sélectionner --</option>
+        <option *ngFor="let chantier of chantiers" [value]="chantier.id">
+          {{ chantier.nom }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Type *</label>
+      <select [(ngModel)]="formData.type_document" name="type_document" required>
+        <option *ngFor="let type of types" [value]="type.value">
+          {{ type.label }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea [(ngModel)]="formData.description" name="description" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Fichier *</label>
+      <div class="file-upload" (click)="fileInput.click()">
+        <input 
+          #fileInput 
+          type="file" 
+          (change)="onFileSelected($event)"
+          accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+          hidden
+        >
+        <p>📎 Cliquez pour sélectionner un fichier</p>
+        <p class="file-name" *ngIf="fileName">{{ fileName }}</p>
+      </div>
+    </div>
+    <button type="submit" class="btn">Uploader</button>
+  </form>
+</app-modal>

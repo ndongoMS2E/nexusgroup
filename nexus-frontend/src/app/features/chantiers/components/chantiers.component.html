@@ -1,0 +1,379 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2>🏗️ Gestion des Chantiers</h2>
+      <p class="breadcrumb">Accueil / Chantiers / Tous les chantiers</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="loadChantiers()">🔄 Actualiser</button>
+      <button class="btn-primary" (click)="openModal()">+ Nouveau Chantier</button>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-bar">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label class="filter-label">Rechercher</label>
+        <input 
+          type="text" 
+          class="filter-input" 
+          placeholder="Nom du chantier, client..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Tabs -->
+  <div class="status-tabs">
+    <div 
+      *ngFor="let status of statusCounts"
+      class="status-tab" 
+      [class.active]="currentFilter === status.status"
+      (click)="filterByStatus(status.status)"
+    >
+      <span>{{ status.icon }} {{ status.label }}</span>
+      <span class="status-tab-count">{{ status.count }}</span>
+    </div>
+  </div>
+
+  <!-- Chantiers Grid -->
+  <div class="chantiers-grid">
+    <div 
+      *ngFor="let chantier of filteredChantiers" 
+      class="chantier-card"
+      [attr.data-status]="chantier.status"
+    >
+      <div class="chantier-header">
+        <div>
+          <div class="chantier-title">{{ chantier.nom }}</div>
+          <div class="chantier-location">📍 {{ chantier.adresse }}, {{ chantier.ville }}</div>
+        </div>
+        <span class="chantier-status-badge" [ngClass]="getStatusClass(chantier.status)">
+          {{ statusLabels[chantier.status]?.label || chantier.status }}
+        </span>
+      </div>
+
+      <div class="chantier-info">
+        <div class="info-item">
+          <div class="info-label">Client</div>
+          <div class="info-value">{{ chantier.client_nom }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Budget</div>
+          <div class="info-value">{{ chantier.budget_prevu | money }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Référence</div>
+          <div class="info-value">{{ chantier.reference }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Consommé</div>
+          <div class="info-value">{{ chantier.budget_consomme | money }}</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Budget consommé</span>
+          <span class="progress-value">{{ getProgressPercentage(chantier) }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div 
+            class="progress-fill" 
+            [style.width.%]="getProgressPercentage(chantier)"
+            [class.warning]="getProgressPercentage(chantier) > 80"
+            [class.danger]="getProgressPercentage(chantier) > 95"
+          ></div>
+        </div>
+      </div>
+
+      <div class="chantier-actions">
+        <!-- Actions selon le statut -->
+        <ng-container [ngSwitch]="chantier.status">
+          
+          <!-- Planifié -->
+          <ng-container *ngSwitchCase="'planifie'">
+            <button class="action-btn primary" (click)="demarrerChantier(chantier)">
+              ▶️ Démarrer
+            </button>
+            <button class="action-btn" (click)="openDetailsModal(chantier)">
+              👁️ Détails
+            </button>
+            <button class="action-btn danger" (click)="deleteChantier(chantier.id)">
+              🗑️
+            </button>
+          </ng-container>
+
+          <!-- En cours -->
+          <ng-container *ngSwitchCase="'en_cours'">
+            <button class="action-btn warning" (click)="suspendreChantier(chantier)">
+              ⏸️ Suspendre
+            </button>
+            <button class="action-btn success" (click)="terminerChantier(chantier)">
+              ✅ Terminer
+            </button>
+            <button class="action-btn" (click)="openDetailsModal(chantier)">
+              👁️ Détails
+            </button>
+          </ng-container>
+
+          <!-- Suspendu -->
+          <ng-container *ngSwitchCase="'suspendu'">
+            <button class="action-btn primary" (click)="reprendreChantier(chantier)">
+              ▶️ Reprendre
+            </button>
+            <button class="action-btn" (click)="openDetailsModal(chantier)">
+              👁️ Détails
+            </button>
+          </ng-container>
+
+          <!-- Terminé -->
+          <ng-container *ngSwitchCase="'termine'">
+            <button class="action-btn info" (click)="downloadRapport(chantier.id)">
+              📄 Rapport
+            </button>
+            <button class="action-btn" (click)="openDetailsModal(chantier)">
+              👁️ Détails
+            </button>
+          </ng-container>
+
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredChantiers.length === 0" class="empty-state">
+    <div class="empty-icon">🏗️</div>
+    <div class="empty-text">Aucun chantier trouvé</div>
+    <button class="btn-primary" (click)="openModal()">+ Créer un chantier</button>
+  </div>
+</div>
+
+<!-- Modal Nouveau Chantier -->
+<app-modal [isOpen]="isModalOpen" title="Nouveau Chantier" (closed)="closeModal()">
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nom du chantier *</label>
+        <input type="text" [(ngModel)]="formData.nom" name="nom" placeholder="Ex: Villa Almadies" required>
+      </div>
+      <div class="form-group">
+        <label>Client *</label>
+        <input type="text" [(ngModel)]="formData.client_nom" name="client_nom" placeholder="Nom du client" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Adresse *</label>
+        <input type="text" [(ngModel)]="formData.adresse" name="adresse" placeholder="Adresse complète" required>
+      </div>
+      <div class="form-group">
+        <label>Ville</label>
+        <input type="text" [(ngModel)]="formData.ville" name="ville" value="Dakar">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Budget prévu (FCFA) *</label>
+        <input type="number" [(ngModel)]="formData.budget_prevu" name="budget_prevu" placeholder="0" required>
+      </div>
+      <div class="form-group">
+        <label>Date de début</label>
+        <input type="date" [(ngModel)]="formData.date_debut" name="date_debut">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Date de fin prévue</label>
+      <input type="date" [(ngModel)]="formData.date_fin_prevue" name="date_fin_prevue">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+      <button type="submit" class="btn">Créer le chantier</button>
+    </div>
+  </form>
+</app-modal>
+
+<!-- Modal Détails Chantier -->
+<div class="modal-overlay" [class.active]="isDetailsModalOpen" (click)="closeDetailsModal()">
+  <div class="modal-large" *ngIf="selectedChantier" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>{{ selectedChantier.nom }}</h3>
+        <p class="modal-subtitle">Gestion du cycle de vie et historique</p>
+      </div>
+      <button class="modal-close" (click)="closeDetailsModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Workflow -->
+      <div class="modal-section">
+        <h4>🔄 Cycle de Vie du Chantier</h4>
+        <div class="status-workflow">
+          <div class="workflow-step" 
+               [class.completed]="isWorkflowStepCompleted(selectedChantier, 'planifie')"
+               [class.active]="isWorkflowStepActive(selectedChantier, 'planifie')">
+            <div class="workflow-icon">📝</div>
+            <div class="workflow-label">Planifié</div>
+          </div>
+          <div class="workflow-arrow">→</div>
+          <div class="workflow-step"
+               [class.completed]="isWorkflowStepCompleted(selectedChantier, 'en_cours')"
+               [class.active]="isWorkflowStepActive(selectedChantier, 'en_cours')">
+            <div class="workflow-icon">🔄</div>
+            <div class="workflow-label">En Cours</div>
+          </div>
+          <div class="workflow-arrow">→</div>
+          <div class="workflow-step"
+               [class.active]="isWorkflowStepActive(selectedChantier, 'suspendu')">
+            <div class="workflow-icon">⏸️</div>
+            <div class="workflow-label">Suspendu</div>
+          </div>
+          <div class="workflow-arrow">→</div>
+          <div class="workflow-step"
+               [class.completed]="isWorkflowStepCompleted(selectedChantier, 'termine')"
+               [class.active]="isWorkflowStepActive(selectedChantier, 'termine')">
+            <div class="workflow-icon">✅</div>
+            <div class="workflow-label">Terminé</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informations -->
+      <div class="modal-section">
+        <h4>📋 Informations</h4>
+        <div class="info-grid">
+          <div class="info-card">
+            <span class="info-label">Référence</span>
+            <span class="info-value">{{ selectedChantier.reference }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Client</span>
+            <span class="info-value">{{ selectedChantier.client_nom }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Adresse</span>
+            <span class="info-value">{{ selectedChantier.adresse }}, {{ selectedChantier.ville }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Budget</span>
+            <span class="info-value">{{ selectedChantier.budget_prevu | money }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Consommé</span>
+            <span class="info-value">{{ selectedChantier.budget_consomme | money }}</span>
+          </div>
+          <div class="info-card">
+            <span class="info-label">Progression</span>
+            <span class="info-value">{{ getProgressPercentage(selectedChantier) }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-section">
+        <h4>⚡ Actions Disponibles</h4>
+        <div class="actions-grid">
+          <button *ngIf="selectedChantier.status === 'planifie'" 
+                  class="btn-success" 
+                  (click)="openStatusModal(selectedChantier, 'en_cours')">
+            ▶️ Démarrer le chantier
+          </button>
+          <button *ngIf="selectedChantier.status === 'en_cours'" 
+                  class="btn-warning" 
+                  (click)="openStatusModal(selectedChantier, 'suspendu')">
+            ⏸️ Suspendre le chantier
+          </button>
+          <button *ngIf="selectedChantier.status === 'en_cours'" 
+                  class="btn-success" 
+                  (click)="openStatusModal(selectedChantier, 'termine')">
+            ✅ Marquer comme terminé
+          </button>
+          <button *ngIf="selectedChantier.status === 'suspendu'" 
+                  class="btn-primary" 
+                  (click)="openStatusModal(selectedChantier, 'en_cours')">
+            ▶️ Reprendre le chantier
+          </button>
+          <button class="btn-secondary" (click)="downloadRapport(selectedChantier.id)">
+            📄 Télécharger le rapport
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDetailsModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Changement de Statut -->
+<div class="modal-overlay" [class.active]="isStatusModalOpen" (click)="closeStatusModal()">
+  <div class="modal-medium" *ngIf="selectedChantier" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Changer le statut</h3>
+        <p class="modal-subtitle">
+          {{ selectedChantier.nom }}: 
+          {{ statusLabels[selectedChantier.status]?.icon }} {{ statusLabels[selectedChantier.status]?.label }} 
+          → 
+          {{ statusLabels[statusChangeData.newStatus]?.icon }} {{ statusLabels[statusChangeData.newStatus]?.label }}
+        </p>
+      </div>
+      <button class="modal-close" (click)="closeStatusModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nouveau statut</label>
+        <select [(ngModel)]="statusChangeData.newStatus">
+          <option value="planifie">📝 Planifié</option>
+          <option value="en_cours">🔄 En Cours</option>
+          <option value="suspendu">⏸️ Suspendu</option>
+          <option value="termine">✅ Terminé</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Raison du changement *</label>
+        <textarea 
+          [(ngModel)]="statusChangeData.raison" 
+          rows="4" 
+          placeholder="Expliquez pourquoi vous changez le statut..."
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Date effective</label>
+        <input type="date" [(ngModel)]="statusChangeData.dateEffective">
+      </div>
+
+      <div class="form-group">
+        <label>Notifier</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="statusChangeData.notifyChef">
+            Chef de chantier
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="statusChangeData.notifyClient">
+            Client
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="statusChangeData.notifyEquipe">
+            Équipe complète
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeStatusModal()">Annuler</button>
+      <button class="btn-primary" (click)="confirmStatusChange()">Confirmer le changement</button>
+    </div>
+  </div>
+</div>

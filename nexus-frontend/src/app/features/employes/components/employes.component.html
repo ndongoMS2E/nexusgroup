@@ -1,0 +1,208 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2>👷 Gestion des Employés</h2>
+      <p class="breadcrumb">Accueil / Employés</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/pointage" class="btn-secondary">📋 Pointage</a>
+      <button class="btn-primary" (click)="openModal()">+ Nouvel Employé</button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon">👷</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalEmployes }}</span>
+        <span class="stat-label">Total Employés</span>
+      </div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ employesAffectes }}</span>
+        <span class="stat-label">Affectés</span>
+      </div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ employesNonAffectes }}</span>
+        <span class="stat-label">Non Affectés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-bar">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label class="filter-label">Rechercher</label>
+        <input 
+          type="text" 
+          class="filter-input" 
+          placeholder="Nom, prénom, matricule..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearch()"
+        >
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Chantier</label>
+        <select class="filter-select" [(ngModel)]="filterChantier" (change)="onFilterChange()">
+          <option value="tous">Tous les employés</option>
+          <option value="non_affectes">Non affectés</option>
+          <option *ngFor="let chantier of chantiers" [value]="chantier.id">
+            {{ chantier.nom }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table des employés -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Matricule</th>
+          <th>Nom & Prénom</th>
+          <th>Poste</th>
+          <th>Téléphone</th>
+          <th>Salaire/jour</th>
+          <th>Chantier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let employe of filteredEmployes">
+          <td><span class="matricule">{{ employe.matricule }}</span></td>
+          <td>
+            <div class="employe-name">
+              <span class="avatar">{{ employe.prenom[0] }}{{ employe.nom[0] }}</span>
+              <div>
+                <strong>{{ employe.prenom }} {{ employe.nom }}</strong>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge-poste">{{ getPosteLabel(employe.poste) }}</span></td>
+          <td>{{ employe.telephone || '-' }}</td>
+          <td>{{ employe.salaire_journalier | money }}</td>
+          <td>
+            <span 
+              class="badge-chantier" 
+              [class.non-affecte]="!employe.chantier_id"
+            >
+              {{ getChantierNom(employe.chantier_id) }}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <button class="btn-icon" title="Affecter" (click)="openAffectationModal(employe)">
+                🏗️
+              </button>
+              <button class="btn-icon danger" title="Supprimer" (click)="deleteEmploye(employe.id)">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredEmployes.length === 0" class="empty-state">
+      <div class="empty-icon">👷</div>
+      <div class="empty-text">Aucun employé trouvé</div>
+      <button class="btn-primary" (click)="openModal()">+ Ajouter un employé</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nouvel Employé -->
+<app-modal [isOpen]="isModalOpen" title="Nouvel Employé" (closed)="closeModal()">
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Prénom *</label>
+        <input type="text" [(ngModel)]="formData.prenom" name="prenom" placeholder="Prénom" required>
+      </div>
+      <div class="form-group">
+        <label>Nom *</label>
+        <input type="text" [(ngModel)]="formData.nom" name="nom" placeholder="Nom" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" [(ngModel)]="formData.telephone" name="telephone" placeholder="77 123 45 67">
+      </div>
+      <div class="form-group">
+        <label>Poste *</label>
+        <select [(ngModel)]="formData.poste" name="poste" required>
+          <option *ngFor="let poste of postes" [value]="poste.value">{{ poste.label }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Salaire journalier (FCFA) *</label>
+        <input type="number" [(ngModel)]="formData.salaire_journalier" name="salaire_journalier" placeholder="5000" required>
+      </div>
+      <div class="form-group">
+        <label>Date d'embauche *</label>
+        <input type="date" [(ngModel)]="formData.date_embauche" name="date_embauche" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Affecter au chantier (optionnel)</label>
+      <select [(ngModel)]="formData.chantier_id" name="chantier_id">
+        <option [ngValue]="undefined">-- Non affecté --</option>
+        <option *ngFor="let chantier of chantiers" [ngValue]="chantier.id">{{ chantier.nom }}</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="closeModal()">Annuler</button>
+      <button type="submit" class="btn-primary">Créer l'employé</button>
+    </div>
+  </form>
+</app-modal>
+
+<!-- Modal Affectation -->
+<div class="modal-overlay" [class.active]="isAffectationModalOpen" (click)="closeAffectationModal()">
+  <div class="modal-medium" *ngIf="selectedEmploye" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Affecter l'employé</h3>
+        <p class="modal-subtitle">{{ selectedEmploye.prenom }} {{ selectedEmploye.nom }} ({{ selectedEmploye.matricule }})</p>
+      </div>
+      <button class="modal-close" (click)="closeAffectationModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="current-affectation" *ngIf="selectedEmploye.chantier_id">
+        <p>Actuellement affecté à : <strong>{{ getChantierNom(selectedEmploye.chantier_id) }}</strong></p>
+      </div>
+      <div class="current-affectation warning" *ngIf="!selectedEmploye.chantier_id">
+        <p>Cet employé n'est actuellement affecté à aucun chantier.</p>
+      </div>
+
+      <div class="form-group">
+        <label>Nouveau chantier</label>
+        <select [(ngModel)]="affectationData.chantier_id">
+          <option [ngValue]="null">-- Désaffecter --</option>
+          <option *ngFor="let chantier of chantiers" [ngValue]="chantier.id">
+            {{ chantier.nom }} ({{ chantier.ville }})
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeAffectationModal()">Annuler</button>
+      <button class="btn-primary" (click)="confirmerAffectation()">Confirmer l'affectation</button>
+    </div>
+  </div>
+</div>

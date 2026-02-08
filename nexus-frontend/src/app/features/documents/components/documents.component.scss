@@ -1,0 +1,75 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+
+  h2 {
+    font-size: 28px;
+  }
+}
+
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.document-card {
+  background: #252525;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #333;
+  text-align: center;
+
+  .icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  h4 {
+    font-size: 14px;
+    margin-bottom: 5px;
+    word-break: break-all;
+  }
+
+  p {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+  }
+}
+
+.document-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.file-upload {
+  border: 2px dashed #444;
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+
+  &:hover {
+    border-color: #888;
+  }
+
+  p {
+    color: #888;
+  }
+
+  .file-name {
+    color: #4caf50;
+    margin-top: 10px;
+  }
+}
+
+.empty-message {
+  color: #666;
+  text-align: center;
+  padding: 40px;
+}

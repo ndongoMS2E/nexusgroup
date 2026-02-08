@@ -1,0 +1,94 @@
+<div class="page">
+  <div class="page-header">
+    <h2>💰 Dépenses</h2>
+    <button class="btn-primary" (click)="openModal()">+ Nouvelle</button>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Libellé</th>
+          <th>Catégorie</th>
+          <th>Montant</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let depense of depenses">
+          <td>{{ depense.reference }}</td>
+          <td>{{ depense.libelle }}</td>
+          <td>{{ depense.categorie }}</td>
+          <td>{{ depense.montant | money }}</td>
+          <td>
+            <span class="status-badge status-{{ depense.status }}">
+              {{ depense.status }}
+            </span>
+          </td>
+          <td>
+            <button 
+              *ngIf="depense.status === 'en_attente'" 
+              class="action-btn success" 
+              (click)="approveDepense(depense.id)"
+              title="Approuver"
+            >
+              ✓
+            </button>
+            <button 
+              class="action-btn delete" 
+              (click)="deleteDepense(depense.id)"
+              title="Supprimer"
+            >
+              🗑️
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="depenses.length === 0">
+          <td colspan="6" class="text-center text-muted">Aucune dépense</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<app-modal [isOpen]="isModalOpen" title="Nouvelle Dépense" (closed)="closeModal()">
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label>Chantier *</label>
+      <select [(ngModel)]="formData.chantier_id" name="chantier_id" required>
+        <option [value]="0" disabled>-- Sélectionner --</option>
+        <option *ngFor="let chantier of chantiers" [value]="chantier.id">
+          {{ chantier.nom }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Libellé *</label>
+      <input type="text" [(ngModel)]="formData.libelle" name="libelle" required>
+    </div>
+    <div class="form-group">
+      <label>Catégorie *</label>
+      <select [(ngModel)]="formData.categorie" name="categorie" required>
+        <option *ngFor="let cat of categories" [value]="cat.value">
+          {{ cat.label }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Montant (FCFA) *</label>
+      <input type="number" [(ngModel)]="formData.montant" name="montant" required>
+    </div>
+    <div class="form-group">
+      <label>Date *</label>
+      <input type="date" [(ngModel)]="formData.date_depense" name="date_depense" required>
+    </div>
+    <div class="form-group">
+      <label>Fournisseur</label>
+      <input type="text" [(ngModel)]="formData.fournisseur" name="fournisseur">
+    </div>
+    <button type="submit" class="btn">Enregistrer</button>
+  </form>
+</app-modal>

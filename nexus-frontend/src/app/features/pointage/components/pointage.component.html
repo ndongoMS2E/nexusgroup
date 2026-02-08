@@ -1,0 +1,189 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2>📋 Pointage Journalier</h2>
+      <p class="breadcrumb">Accueil / Pointage / {{ getChantierNom() }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" [class.active]="showSalaires" (click)="toggleSalaires()">
+        💰 {{ showSalaires ? 'Masquer' : 'Voir' }} Salaires
+      </button>
+      <a routerLink="/employes" class="btn-secondary">👷 Employés</a>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-bar">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label class="filter-label">Chantier</label>
+        <select class="filter-select" [(ngModel)]="selectedChantierId" (change)="onChantierChange()">
+          <option [ngValue]="null" disabled>-- Sélectionner un chantier --</option>
+          <option *ngFor="let chantier of chantiers" [ngValue]="chantier.id">
+            {{ chantier.nom }} ({{ chantier.ville }})
+          </option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Date</label>
+        <input 
+          type="date" 
+          class="filter-input" 
+          [(ngModel)]="selectedDate" 
+          (change)="onDateChange()"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Salaires -->
+  <div class="salaires-section" *ngIf="showSalaires">
+    <div class="section-header">
+      <h3>💰 Calcul des Salaires</h3>
+      <div class="periode-selector">
+        <div class="filter-group">
+          <label>Du</label>
+          <input type="date" [(ngModel)]="dateDebutSalaire" (change)="onPeriodeChange()">
+        </div>
+        <div class="filter-group">
+          <label>Au</label>
+          <input type="date" [(ngModel)]="dateFinSalaire" (change)="onPeriodeChange()">
+        </div>
+        <button class="btn-primary btn-sm" (click)="loadSalaires()">Calculer</button>
+      </div>
+    </div>
+
+    <div class="salaires-table" *ngIf="!isLoadingSalaires">
+      <table>
+        <thead>
+          <tr>
+            <th>Matricule</th>
+            <th>Nom & Prénom</th>
+            <th>Poste</th>
+            <th>Salaire/jour</th>
+            <th>Jours travaillés</th>
+            <th>Heures totales</th>
+            <th>Salaire à payer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let emp of salairesData">
+            <td><span class="matricule">{{ emp.matricule }}</span></td>
+            <td><strong>{{ emp.prenom }} {{ emp.nom }}</strong></td>
+            <td>{{ emp.poste }}</td>
+            <td>{{ emp.salaire_journalier | number:'1.0-0' }} FCFA</td>
+            <td><span class="badge-jours">{{ emp.jours_travailles }} j</span></td>
+            <td>{{ emp.heures_totales }} h</td>
+            <td><strong class="salaire-total">{{ emp.salaire_periode | number:'1.0-0' }} FCFA</strong></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" class="text-right"><strong>TOTAL À PAYER :</strong></td>
+            <td><strong class="grand-total">{{ totalSalaires | number:'1.0-0' }} FCFA</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div *ngIf="salairesData.length === 0 && !isLoadingSalaires" class="empty-salaires">
+      Aucun pointage enregistré pour cette période
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" *ngIf="pointages.length > 0 && !showSalaires">
+    <div class="stat-card">
+      <div class="stat-icon">👷</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalEmployes }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalPresents }}</span>
+        <span class="stat-label">Présents</span>
+      </div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-icon">❌</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalAbsents }}</span>
+        <span class="stat-label">Absents</span>
+      </div>
+    </div>
+    <div class="stat-card warning">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalNonPointes }}</span>
+        <span class="stat-label">Non pointés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grille de pointage -->
+  <div class="pointage-grid" *ngIf="pointages.length > 0 && !showSalaires">
+    <div 
+      *ngFor="let employe of pointages" 
+      class="pointage-card"
+      [class.present]="employe.status === 'present'"
+      [class.absent]="employe.status === 'absent'"
+    >
+      <div class="employe-info">
+        <div class="avatar">{{ employe.prenom[0] }}{{ employe.nom[0] }}</div>
+        <div class="details">
+          <strong>{{ employe.prenom }} {{ employe.nom }}</strong>
+          <span class="matricule">{{ employe.matricule }}</span>
+          <span class="poste">{{ employe.poste }} - {{ employe.salaire_journalier | number:'1.0-0' }} FCFA/j</span>
+        </div>
+      </div>
+      
+      <div class="pointage-actions">
+        <button 
+          class="btn-status present" 
+          [class.active]="employe.status === 'present'"
+          (click)="setPresent(employe)"
+        >
+          ✅ Présent
+        </button>
+        <button 
+          class="btn-status absent" 
+          [class.active]="employe.status === 'absent'"
+          (click)="setAbsent(employe)"
+        >
+          ❌ Absent
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="pointages.length === 0 && !isLoading && !showSalaires" class="empty-state">
+    <div class="empty-icon">📋</div>
+    <div class="empty-text" *ngIf="!selectedChantierId">Sélectionnez un chantier pour voir les employés</div>
+    <div class="empty-text" *ngIf="selectedChantierId">Aucun employé affecté à ce chantier</div>
+    <a *ngIf="selectedChantierId" routerLink="/employes" class="btn-primary">Affecter des employés</a>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading">
+    <p>Chargement...</p>
+  </div>
+
+  <!-- Bouton Sauvegarder -->
+  <div class="save-bar" *ngIf="pointages.length > 0 && !showSalaires">
+    <div class="save-info">
+      <span>{{ totalPresents }} présent(s) / {{ totalAbsents }} absent(s)</span>
+    </div>
+    <button 
+      class="btn-save" 
+      (click)="sauvegarderPointage()"
+      [disabled]="isSaving"
+    >
+      {{ isSaving ? 'Enregistrement...' : '💾 Enregistrer le pointage' }}
+    </button>
+  </div>
+</div>

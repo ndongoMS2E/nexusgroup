@@ -1,0 +1,115 @@
+<div class="page">
+  <div class="page-header">
+    <h2>📦 Matériels</h2>
+    <button class="btn-primary" (click)="openModal()">+ Nouveau</button>
+  </div>
+
+  <!-- Alertes Stock -->
+  <div class="alerts-section" *ngIf="alertes.length > 0">
+    <div class="alert-box alert-warning" *ngFor="let alerte of alertes">
+      ⚠️ Stock bas: {{ alerte.nom }} - {{ alerte.quantite }} {{ alerte.unite }}
+    </div>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Catégorie</th>
+          <th>Quantité</th>
+          <th>Unité</th>
+          <th>Valeur</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let materiel of materiels" [class.low-stock]="isLowStock(materiel)">
+          <td>{{ materiel.nom }}</td>
+          <td>{{ materiel.categorie }}</td>
+          <td>{{ materiel.quantite }}</td>
+          <td>{{ materiel.unite }}</td>
+          <td>{{ getValeur(materiel) | money }}</td>
+          <td>
+            <button 
+              class="action-btn" 
+              (click)="openMouvementModal(materiel.id)"
+              title="Mouvement Stock"
+            >
+              📦
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="materiels.length === 0">
+          <td colspan="6" class="text-center text-muted">Aucun matériel</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Nouveau Matériel -->
+<app-modal [isOpen]="isModalOpen" title="Nouveau Matériel" (closed)="closeModal()">
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label>Chantier *</label>
+      <select [(ngModel)]="formData.chantier_id" name="chantier_id" required>
+        <option [value]="0" disabled>-- Sélectionner --</option>
+        <option *ngFor="let chantier of chantiers" [value]="chantier.id">
+          {{ chantier.nom }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Nom *</label>
+      <input type="text" [(ngModel)]="formData.nom" name="nom" required>
+    </div>
+    <div class="form-group">
+      <label>Catégorie *</label>
+      <select [(ngModel)]="formData.categorie" name="categorie" required>
+        <option *ngFor="let cat of categories" [value]="cat.value">
+          {{ cat.label }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Unité *</label>
+      <select [(ngModel)]="formData.unite" name="unite" required>
+        <option *ngFor="let u of unites" [value]="u.value">
+          {{ u.label }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Quantité</label>
+      <input type="number" [(ngModel)]="formData.quantite" name="quantite">
+    </div>
+    <div class="form-group">
+      <label>Prix unitaire (FCFA)</label>
+      <input type="number" [(ngModel)]="formData.prix_unitaire" name="prix_unitaire">
+    </div>
+    <button type="submit" class="btn">Ajouter</button>
+  </form>
+</app-modal>
+
+<!-- Modal Mouvement Stock -->
+<app-modal [isOpen]="isMouvementModalOpen" title="Mouvement Stock" (closed)="closeMouvementModal()">
+  <form (ngSubmit)="onMouvementSubmit()">
+    <div class="form-group">
+      <label>Type *</label>
+      <select [(ngModel)]="mouvementData.type_mouvement" name="type_mouvement" required>
+        <option value="entree">Entrée</option>
+        <option value="sortie">Sortie</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Quantité *</label>
+      <input type="number" [(ngModel)]="mouvementData.quantite" name="quantite" required>
+    </div>
+    <div class="form-group">
+      <label>Motif</label>
+      <input type="text" [(ngModel)]="mouvementData.motif" name="motif">
+    </div>
+    <button type="submit" class="btn">Valider</button>
+  </form>
+</app-modal>
