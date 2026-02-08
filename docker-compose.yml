@@ -1,0 +1,57 @@
+networks:
+  web:
+    external: true
+  internal:
+
+services:
+  # ===== BACKEND FASTAPI =====
+  nexus-backend:
+    build: ./nexus-backend
+    container_name: nexus-backend
+    restart: unless-stopped
+    environment:
+      - DB_HOST=nexus-postgres
+      - DB_USER=nexus
+      - DB_PASSWORD=nexus2026
+      - DB_NAME=nexusgroup
+      - SECRET_KEY=nexus2026
+    depends_on:
+      - postgres
+    networks:
+      - web
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus-api.rule=Host(`144.91.66.246`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.nexus-api.entrypoints=web"
+      - "traefik.http.services.nexus-api.loadbalancer.server.port=8000"
+
+  # ===== FRONTEND ANGULAR =====
+  nexus-frontend:
+    build: ./nexus-frontend
+    container_name: nexus-frontend
+    restart: unless-stopped
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexus-front.rule=Host(`144.91.66.246`)"
+      - "traefik.http.routers.nexus-front.entrypoints=web"
+      - "traefik.http.services.nexus-front.loadbalancer.server.port=80"
+
+  # ===== BASE DE DONNÉES =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexus-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=nexus
+      - POSTGRES_PASSWORD=nexus2026
+      - POSTGRES_DB=nexusgroup
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
